@@ -1,5 +1,7 @@
 package destination
 
+//go:generate mockgen -destination mock_producer.go -package destination -mock_names=Producer=MockProducer . Producer
+
 import (
 	"context"
 	sdk "github.com/conduitio/conduit-connector-sdk"

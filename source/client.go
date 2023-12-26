@@ -2,18 +2,25 @@ package source
 
 import (
 	"context"
+	"fmt"
 	"github.com/apache/pulsar-client-go/pulsar"
+	"log"
 )
 
 type PulsarConsumer struct {
 	consumer pulsar.Consumer
 }
 
+var _ Consumer = (*PulsarConsumer)(nil)
+
 func NewPulsarConsumer(ctx context.Context, cfg Config) (*PulsarConsumer, error) {
 
-	client, err := pulsar.NewClient(pulsar.ClientOptions{})
+	log.Println("Pulsar Client: ", cfg.URL)
+	client, err := pulsar.NewClient(pulsar.ClientOptions{
+		URL: cfg.URL,
+	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating pulsar client: %v url: %s", err, cfg.URL)
 	}
 
 	consumer, err := client.Subscribe(pulsar.ConsumerOptions{
@@ -35,7 +42,7 @@ func NewPulsarConsumer(ctx context.Context, cfg Config) (*PulsarConsumer, error)
 
 }
 
-func (c *PulsarConsumer) Consumer() (pulsar.Message, error) {
+func (c *PulsarConsumer) Consume(ctx context.Context) (Record, error) {
 
 	msg, err := c.consumer.Receive(context.Background())
 	if err != nil {
@@ -43,6 +50,18 @@ func (c *PulsarConsumer) Consumer() (pulsar.Message, error) {
 	}
 
 	return msg, nil
+
+}
+
+func (c *PulsarConsumer) Close(ctx context.Context) error {
+
+	err := c.consumer.Unsubscribe()
+	if err != nil {
+		return err
+	}
+	c.consumer.Close()
+
+	return nil
 
 }
 

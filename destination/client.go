@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/apache/pulsar-client-go/pulsar"
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"log"
 )
 
 type PulsarProducer struct {
@@ -13,13 +14,21 @@ type PulsarProducer struct {
 }
 
 func NewPulsarProducer(ctx context.Context, cfg Config) (*PulsarProducer, error) {
-	pc, err := pulsar.NewClient(pulsar.ClientOptions{})
+	pc, err := pulsar.NewClient(pulsar.ClientOptions{
+		URL: cfg.Url,
+	})
+
+	log.Println("Pulsar Client: ", cfg.Url)
 
 	if err != nil {
 		return nil, fmt.Errorf("error creating pulsar client: %v", err)
 	}
 
-	producer, err := pc.CreateProducer(pulsar.ProducerOptions{})
+	producer, err := pc.CreateProducer(pulsar.ProducerOptions{
+		Topic: cfg.Topic,
+		Name:  cfg.Name,
+	})
+
 	if err != nil {
 		return nil, fmt.Errorf("error creating pulsar producer: %v", err)
 	}
